@@ -4,12 +4,22 @@
 \alias{AdRoit.est}
 \title{Estimate the proportions of cell types given by the reference}
 \usage{
-AdRoit.est(bulk.sample, single.ref, silent = FALSE)
+AdRoit.est(
+  bulk.sample,
+  single.ref,
+  use.refvar = FALSE,
+  genes.adapt = NULL,
+  silent = FALSE
+)
 }
 \arguments{
-\item{bulk.sample}{a matrix or data.frame with the rows being genes and columns being samples (or spatial spots for spatial transcriptomics data).}
+\item{bulk.sample}{a matrix or data.frame with the rows being genes and columns being samples.}
 
 \item{single.ref}{the reference object built by the function `ref.build()`.}
+
+\item{use.refvar}{use cross sample variance estimated from single cell reference data when no bulk sample replicates are available.}
+
+\item{genes.adapt}{subset of genes in the single.ref that may be used for adapative learning.}
 
 \item{silent}{whether to print out messages. Default is FALSE.}
 }

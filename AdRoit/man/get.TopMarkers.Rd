@@ -12,7 +12,8 @@ get.TopMarkers(
   p.value.col,
   mito.genes = NULL,
   pval.cutoff = 0.01,
-  n.top = 200
+  n.top = 200,
+  pos.only = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ get.TopMarkers(
 \item{pval.cutoff}{a numeric value to specify cutoff of p values.}
 
 \item{n.top}{specify how many genes to be selected from each cell cluster. Default is 200.}
+
+\item{pos.only}{specify whether only higher expressing gene signatures are selected from each cell cluster.}
 }
 \value{
 a vector of unique gene names to be used for deconvolution.

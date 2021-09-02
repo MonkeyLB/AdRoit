@@ -11,6 +11,8 @@
 #' @param mito.genes a vector of mitochondria genes. These genes will be excluded from selected genes. Default is `NULL`.
 #' @param pval.cutoff a numeric value to specify cutoff of p values.
 #' @param n.top specify how many genes to be selected from each cell cluster. Default is 200.
+#' @param pos.only specify whether only higher expressing gene signatures are selected from each cell cluster.
+#' 
 #'
 #' @return a vector of unique gene names to be used for deconvolution.
 #' @export
@@ -22,7 +24,8 @@ get.TopMarkers <- function(marker.table,
                            p.value.col,
                            mito.genes = NULL,
                            pval.cutoff = 0.01,
-                           n.top = 200){
+                           n.top = 200,
+                           pos.only=FALSE){
     FC <- p.value <- cluster <- alFC <- NULL
 
     ref.markers = data.frame("gene" = marker.table[, gene.col],
@@ -31,10 +34,15 @@ get.TopMarkers <- function(marker.table,
                              "p.value" = marker.table[, p.value.col])
 
     colnames(ref.markers) = c("gene", "cluster", "FC", "p.value")
-
-    TopMarkers <- ref.markers %>% mutate(alFC = abs(log(FC))) %>%
-        filter(p.value < pval.cutoff) %>% group_by(cluster) %>%
-        top_n(n.top, alFC)
+    if (pos.only){
+        TopMarkers <- ref.markers %>% mutate(alFC = (log(FC))) %>%
+            filter(p.value < pval.cutoff) %>% group_by(cluster) %>%
+            top_n(n.top, alFC)
+    }else{
+        TopMarkers <- ref.markers %>% mutate(alFC = abs(log(FC))) %>%
+            filter(p.value < pval.cutoff) %>% group_by(cluster) %>%
+            top_n(n.top, alFC)
+    }
 
     u.feat = TopMarkers$gene %>% unique() %>% as.character()
 
@@ -45,9 +53,9 @@ get.TopMarkers <- function(marker.table,
     }
 
     message("Total unique markers selected: ", length(out))
-    if (length(out) < 1000) {
-        warning("Less than 1K features are selected. Consider increase n.top to get better estimation.")
-    }
+    #if (length(out) < 1000) {
+    #    warning("Less than 1K features are selected. Consider increase n.top to get better estimation.")
+    #}
 
     return(out)
 }

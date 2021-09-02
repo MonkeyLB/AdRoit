@@ -13,6 +13,8 @@ ref.build(
   scale.factor = 1e+05,
   multi.sample.bulk = TRUE,
   multi.sample.single = TRUE,
+  nbootsids = 5,
+  minbootsize = 50,
   silent = FALSE
 )
 }
@@ -32,6 +34,10 @@ ref.build(
 \item{multi.sample.bulk}{specify whether the bulk to be deconvoluted has multiple samples. Default is TRUE.}
 
 \item{multi.sample.single}{specify whether the single cell reference has multiple samples. Default is TRUE.}
+
+\item{nbootsids}{specify the number of samples simulated via bootstapping using the single cell reference data. Default is 5.}
+
+\item{minbootsize}{specify the minimum number of cells that are used to synthesize one bulk sample for each cell type and each sample. Default is 50.}
 
 \item{silent}{whether to print out messages. Default is FALSE.}
 }

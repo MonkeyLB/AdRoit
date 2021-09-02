@@ -22,6 +22,7 @@ get.Markers.AdRoit <- function(SC.counts, annotation){
         b = as.numeric(SC.mat[gene, cell.id2])
 
         FC = (exp(mean(a))+1e-9)/(exp(mean(b))+1e-9)
+
         w.test = wilcox.test(a, b)
         pvalue = w.test$p.value
         return(c(FC, pvalue))
