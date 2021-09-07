@@ -40,6 +40,7 @@ ref.build <- function(counts,
     no_cores <- detectCores() - 1
     registerDoParallel(no_cores)
     negbin.par <- list()
+    counts=round(counts)
     cell.types = unique(sort(as.vector(annotations)))
     for (c in cell.types) {
       cells.id = colnames(counts)[which(annotations == c)]
