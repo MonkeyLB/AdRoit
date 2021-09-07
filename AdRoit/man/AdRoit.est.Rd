@@ -8,7 +8,7 @@ AdRoit.est(
   bulk.sample,
   single.ref,
   use.refvar = FALSE,
-  genes.adapt = NULL,
+  per.sample.adapt = FALSE,
   silent = FALSE
 )
 }
@@ -17,9 +17,9 @@ AdRoit.est(
 
 \item{single.ref}{the reference object built by the function `ref.build()`.}
 
-\item{use.refvar}{use cross sample variance estimated from single cell reference data when no bulk sample replicates are available.}
+\item{use.refvar}{use cross sample variability estimated from single cell reference data when no bulk sample replicates are available.}
 
-\item{genes.adapt}{subset of genes in the single.ref that may be used for adapative learning.}
+\item{per.sample.adapt}{whether to do adapative learning for each sample.}
 
 \item{silent}{whether to print out messages. Default is FALSE.}
 }
