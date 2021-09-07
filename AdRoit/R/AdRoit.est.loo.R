@@ -61,7 +61,8 @@ AdRoit.est.loo <- function(n, bulk.sample, single.ref, per.sample.adapt=FALSE,si
     ptheta = M$x/sum(M$x)
     msf = abs((bulk.sample[genes, n])/(x %*% ptheta))
     msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
-    
+  }
+  if (nb < 3){
     tmp=cbind(matrix(M$x %*% t(w.mu),ncol=1), matrix(M$x^2 %*% t(w.sigma),ncol=1))
     rownames(tmp)=genes
     w=1/(1 + tmp[, 2]/tmp[, 1])
