@@ -70,7 +70,7 @@ AdRoit.est.loo <- function(n, bulk.sample, single.ref, per.sample.adapt=FALSE,si
   }
   
   ns = ncol(x)
-  theta0 = rep(1/ns,ns) #diff(sort(c(runif(ns - 1), 0, 1)))
+  theta0 = diff(sort(c(runif(ns - 1), 0, 1)))
   
   if (silent == FALSE) {
     message(colnames(bulk.sample)[n])
