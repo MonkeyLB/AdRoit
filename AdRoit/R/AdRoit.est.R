@@ -48,7 +48,7 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
         if(!per.sample.adapt){
           M = nnls::nnls(w0*x[genes,],  w0*rowMeans(bulk.sample[genes, ]))
           ptheta = M$x/sum(M$x)
-          msf = abs((bulk.sample[genes, i])/(x %*% ptheta))
+          msf = abs(rowMeans(bulk.sample[genes, ])/(x %*% ptheta))
           msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
           r = log(msf + 1)
         }
