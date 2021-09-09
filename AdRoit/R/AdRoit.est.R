@@ -56,7 +56,7 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
 
 
     ns = ncol(x)
-    theta0 = rep(1/ns,ns) #diff(sort(c(runif(ns - 1), 0, 1)))
+    theta0 = diff(sort(c(runif(ns - 1), 0, 1)))
     res <- NULL
 
     for (i in seq_len(nb)){
