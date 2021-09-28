@@ -139,7 +139,7 @@ ref.build <- function(counts,
       tmpv[is.na(tmpv)]=0
       w.sigma=cbind(w.sigma, tmpv)
     }
-    colnames(w.mu)=colnames(w.lambda)=names(single.pool)
+    colnames(w.mu)=colnames(w.sigma)=names(single.pool)
     
     ref.est = list(mus = mus, lambda = sizes, cell.specificity.w = w0, 
                    cross.sample.w = list("w.mu"=w.mu,"w.sigma"=w.sigma))
