@@ -7,6 +7,7 @@
 #' @param use.refvar use cross sample variability estimated from single cell reference data when no bulk sample replicates are available. 
 #' @param per.sample.adapt whether to do adapative learning for each sample. 
 #' @param silent whether to print out messages. Default is FALSE.
+#' @param lambda regularization strength. Default is 1.
 #' @importFrom parallel detectCores
 #' @importFrom doParallel registerDoParallel stopImplicitCluster
 #' @importFrom stats optim
@@ -14,7 +15,7 @@
 #' @return a matrix with rows being cell types and columns being bulk samples, and entries are estimated proportions.
 #' @export
 
-AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.adapt=FALSE,silent = FALSE){
+AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.adapt=FALSE,silent = FALSE, lambda=1){
 
     # Calculate the number of cores
     no_cores <- detectCores() - 1
@@ -50,7 +51,7 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
           ptheta = M$x/sum(M$x)
           msf = abs(rowMeans(bulk.sample[genes, ])/(x %*% ptheta))
           msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
-          r = log(msf + 1)
+          r = log2(msf + 1)
         }
     }
 
@@ -70,23 +71,22 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
           ptheta = M$x/sum(M$x)
           msf = abs((bulk.sample[genes, i])/(x %*% ptheta))
           msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
-          r = log(msf + 1)
+          r = log2(msf + 1)
         }
       
         if (nb < 3 || use.refvar) {
-          tmp=cbind(matrix(M$x %*% t(w.mu),ncol=1), matrix(M$x^2 %*% t(w.sigma),ncol=1))
-          rownames(tmp)=genes
-          w=1/(1 + tmp[, 2]/tmp[, 1])
+          w= as.numeric(matrix(M$x %*% t(w.mu),ncol=1)/matrix(M$x %*% t(w.sigma),ncol=1))
+          names(w)=genes
           w[which(is.infinite(w) | is.na(w))] = 0
         }
         
         y = bulk.sample[genes, i]
         fn = function(theta) {
-            (w0 * w) %*% (y - r * (x %*% theta))^2 + sum(theta^2)
+         (w0 * w) %*% (y - r * (x %*% theta))^2 + lambda * sum(theta^2)
         }
-
+        print(summary(r))
         gn = function(theta) {
-            -2 * t(sweep(x, 1, r, `*`)) %*% (w0 * w * (y - r*(x %*% theta))) + 2 * theta
+          -2 * t(sweep(x, 1, r, `*`)) %*% (w0 * w * (y - r*(x %*% theta))) + 2 * lambda * theta
         }
 
         op <- options(show.error.messages = FALSE)
