@@ -9,7 +9,8 @@ AdRoit.est(
   single.ref,
   use.refvar = FALSE,
   per.sample.adapt = FALSE,
-  silent = FALSE
+  silent = FALSE,
+  lambda = 1
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ AdRoit.est(
 \item{per.sample.adapt}{whether to do adapative learning for each sample.}
 
 \item{silent}{whether to print out messages. Default is FALSE.}
+
+\item{lambda}{regularization strength. Default is 1.}
 }
 \value{
 a matrix with rows being cell types and columns being bulk samples, and entries are estimated proportions.
