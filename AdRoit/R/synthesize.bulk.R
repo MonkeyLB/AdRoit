@@ -15,26 +15,31 @@
 
 synthesize.bulk <- function(counts, annotations, SampleID, prop = "original"){
 
-  clusters = unique(sort(annotations))
+  clusters = unique(sort(as.vector(annotations)))
   if (prop == "original") {
     s.SCcounts = counts
     s.annotations = annotations
     s.SampleID = SampleID
   } else if (length(prop) == length(clusters) & sum(prop) ==
              1) {
-    N = ncol(counts)
+    names(SampleID)=colnames(counts)
+    N = ncol(counts)/length(unique(SampleID))
     ns = round(prop * N)
-    sampled.cells <- NULL
-    for (i in 1:length(ns)) {
-      cluster.cells = colnames(counts)[which(annotations ==
-                                               clusters[i])]
-      sampled.cells = c(sampled.cells, sample(cluster.cells,
-                                              ns, replace = T))
+    all.sampled.cells=c()
+    for(each in unique(SampleID)){
+      sampled.cells <- NULL
+      for (i in 1:length(ns)) {
+        cluster.cells = colnames(counts)[which(SampleID == each & 
+                                                 annotations == clusters[i])]
+        sampled.cells = c(sampled.cells, sample(cluster.cells,
+                                                ns[i], replace = T))
+      }
+      all.sampled.cells=c(all.sampled.cells,sampled.cells)
     }
-    s.SCcounts = counts[, sampled.cells]
-    s.annotations = annotations[which(colnames(counts) %in%
-                                        sampled.cells)]
-    s.SampleID = SampleID[which(colnames(counts) %in% sampled.cells)]
+
+    s.SCcounts = counts[, all.sampled.cells]
+    s.annotations = annotations[all.sampled.cells]
+    s.SampleID = SampleID[all.sampled.cells]
   } else {
     message("prop needs to be either \"original\" or a vector of length\n        
             \tequal to number of cluster and sums to 1")

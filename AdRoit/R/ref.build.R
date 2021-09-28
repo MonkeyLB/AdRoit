@@ -33,113 +33,117 @@ ref.build <- function(counts,
                        scale.factor = 1e+05,
                        multi.sample.bulk = TRUE,
                        multi.sample.single = TRUE,
-                       nbootsids=5, 
+                       nbootsids=10, 
                        minbootsize=50,
                        silent = FALSE){
     
-    no_cores <- detectCores() - 1
-    registerDoParallel(no_cores)
-    negbin.par <- list()
-    counts=round(as.matrix(counts))
-    cell.types = unique(sort(as.vector(annotations)))
-    for (c in cell.types) {
-      cells.id = colnames(counts)[which(annotations == c)]
-      if (normalize == "Total") {
-        temp = round(scale.factor * (sweep(counts[, cells.id], 
-                                           2, colSums(counts[, cells.id]), `/`)))
-      } else if (normalize == "Median") {
-        medcnt = median(colSums(counts[, cells.id]))
-        temp = round(medcnt * (sweep(counts[, cells.id], 
-                                     2, colSums(counts[, cells.id]), `/`)))
-      } else if (normalize == "None") {
-        temp = counts[, cells.id]
-      } else {
-        message("normalize has to be one of Total, Median and None")
-      }
-      
-      if (silent == FALSE) {
-        message(paste("Estimate means and dispersions for cell type", 
-                      c, sep = ": "))
-      }
-      dim(temp)
-      negbin.par[[c]] <- foreach(i = genes, .combine = rbind) %dopar% 
-        negbin.est(temp[i, ])
-      rownames(negbin.par[[c]]) = genes
-      rm(temp)
-    }
-    mus <- sizes <- NULL
-    for (i in 1:length(negbin.par)) {
-      mus = cbind(mus, negbin.par[[i]][, 2])
-      sizes = cbind(sizes, negbin.par[[i]][, 1])
-    }
-    vars = mus + mus^2/sizes
-    colnames(mus) = colnames(sizes) = cell.types
-    midx = apply(mus, 1, which.max)
-    w0 <- NULL
-    for (i in 1:length(midx)) {
-      w0 = c(w0, mus[i, midx[i]]/vars[i, midx[i]])
-    }
-    w0[which(is.na(w0) | is.infinite(w0))] = 0
-    if (multi.sample.bulk == TRUE) {
-      ref.est = list(mus = mus, lambda = sizes, cell.specificity.w = w0)
+  no_cores <- detectCores() - 1
+  registerDoParallel(no_cores)
+  negbin.par <- list()
+  counts=round(as.matrix(counts))
+  cell.types = unique(sort(as.vector(annotations)))
+  for (c in cell.types) {
+    cells.id = colnames(counts)[which(annotations == c)]
+    if (normalize == "Total") {
+      temp = round(scale.factor * (sweep(counts[, cells.id], 
+                                         2, colSums(counts[, cells.id]), `/`)))
+    } else if (normalize == "Median") {
+      medcnt = median(colSums(counts[, cells.id]))
+      temp = round(medcnt * (sweep(counts[, cells.id], 
+                                   2, colSums(counts[, cells.id]), `/`)))
+    } else if (normalize == "None") {
+      temp = counts[, cells.id]
     } else {
-      bootcounts=counts
-      bootannots=as.vector(annotations)
-      if (multi.sample.single == TRUE) {
-        if (is.null(samples)) {
-          stop("Please provide sample ID for each cell.")
-        }
-        bootsids = samples
-      } else {
-        bootcounts=bootannots=bootsids=c()
-        for (ct in cell.types){
-          selcells= which(annotations==ct)
-          if(length(selcells)>=nbootsids*minbootsize){ 
-            tmpbootcounts=counts[,selcells,drop=F]
-            tmpbootannots=as.vector(annotations[selcells,drop=F])
-            tmpbootsids=paste0("sample_",mapper[as.character(sample(1+((1:length(selcells))-1) %% nbootsids))])
-          }else{
-            tmpbootcounts=tmpbootannots=tmpbootsids=c()
-            nrounds=ceiling(nbootsids*minbootsize/length(selcells))
-            
-            for (rd in 1:nrounds){
-              mapper=1:nbootsids; names(mapper)=sample(1:nbootsids)
-              addcounts=counts[,selcells,drop=F]
-              addannots=as.vector(annotations[selcells,drop=F])
-              addsids=paste0("sample_",mapper[as.character(sample(1+((1:length(selcells))-1) %% nbootsids))])
-              colnames(addcounts)=names(addannots)=names(addsids)=paste0(colnames(counts[,selcells,drop=F]),"_",rd)
-              if(rd<nrounds){
-                tmpbootcounts=cbind(tmpbootcounts, addcounts)
-                tmpbootannots=c(tmpbootannots,addannots)
-                tmpbootsids=c(tmpbootsids, addsids)
-              }else{
-                rest=minbootsize-table(tmpbootsids)
-                whichrest=setdiff(unlist(sapply(names(rest),function(x){as.character(names(addsids)[which(addsids==x)[1:max(0,rest[x])]])})),NA)
-                tmpbootcounts=cbind(tmpbootcounts, addcounts[,whichrest,drop=F])
-                tmpbootannots=c(tmpbootannots,addannots[whichrest,drop=F])
-                tmpbootsids=c(tmpbootsids, addsids[whichrest,drop=F])
-              }
+      message("normalize has to be one of Total, Median and None")
+    }
+    
+    if (silent == FALSE) {
+      message(paste("Estimate means and dispersions for cell type", 
+                    c, sep = ": "))
+    }
+    dim(temp)
+    negbin.par[[c]] <- foreach(i = genes, .combine = rbind) %dopar% 
+      negbin.est(temp[i, ])
+    rownames(negbin.par[[c]]) = genes
+    rm(temp)
+  }
+  mus <- sizes <- NULL
+  for (i in 1:length(negbin.par)) {
+    mus = cbind(mus, negbin.par[[i]][, 2])
+    sizes = cbind(sizes, negbin.par[[i]][, 1])
+  }
+  vars = mus + mus^2/sizes
+  colnames(mus) = colnames(sizes) = cell.types
+  midx = apply(mus, 1, which.max)
+  w0 <- NULL
+  for (i in 1:length(midx)) {
+    w0 = c(w0, mus[i, midx[i]]/vars[i, midx[i]])
+  }
+  w0[which(is.na(w0) | is.infinite(w0))] = 0
+  if (multi.sample.bulk == TRUE) {
+    ref.est = list(mus = mus, lambda = sizes, cell.specificity.w = w0)
+  } else {
+    bootcounts=counts
+    bootannots=as.vector(annotations)
+    if (multi.sample.single == TRUE) {
+      if (is.null(samples)) {
+        stop("Please provide sample ID for each cell.")
+      }
+      bootsids = samples
+    } else {
+      bootcounts=bootannots=bootsids=c()
+      for (ct in cell.types){
+        selcells= which(annotations==ct)
+        if(length(selcells)>=nbootsids*minbootsize){ 
+          tmpbootcounts=counts[,selcells,drop=F]
+          tmpbootannots=as.vector(annotations[selcells,drop=F])
+          tmpbootsids=paste0("sample_",mapper[as.character(sample(1+((1:length(selcells))-1) %% nbootsids))])
+        }else{
+          tmpbootcounts=tmpbootannots=tmpbootsids=c()
+          nrounds=ceiling(nbootsids*minbootsize/length(selcells))
+          
+          for (rd in 1:nrounds){
+            mapper=1:nbootsids; names(mapper)=sample(1:nbootsids)
+            addcounts=counts[,selcells,drop=F]
+            addannots=as.vector(annotations[selcells,drop=F])
+            addsids=paste0("sample_",mapper[as.character(sample(1+((1:length(selcells))-1) %% nbootsids))])
+            colnames(addcounts)=names(addannots)=names(addsids)=paste0(colnames(counts[,selcells,drop=F]),"_",rd)
+            if(rd<nrounds){
+              tmpbootcounts=cbind(tmpbootcounts, addcounts)
+              tmpbootannots=c(tmpbootannots,addannots)
+              tmpbootsids=c(tmpbootsids, addsids)
+            }else{
+              rest=minbootsize-table(tmpbootsids)
+              whichrest=setdiff(unlist(sapply(names(rest),function(x){as.character(names(addsids)[which(addsids==x)[1:max(0,rest[x])]])})),NA)
+              tmpbootcounts=cbind(tmpbootcounts, addcounts[,whichrest,drop=F])
+              tmpbootannots=c(tmpbootannots,addannots[whichrest,drop=F])
+              tmpbootsids=c(tmpbootsids, addsids[whichrest,drop=F])
             }
           }
-          bootcounts=cbind(bootcounts, tmpbootcounts)
-          bootannots=c(bootannots, tmpbootannots)
-          bootsids=c(bootsids, tmpbootsids)
         }
+        bootcounts=cbind(bootcounts, tmpbootcounts)
+        bootannots=c(bootannots, tmpbootannots)
+        bootsids=c(bootsids, tmpbootsids)
       }
-      w.mu=w.sigma=c()
-      single.pool=synthesize.celltype(bootcounts, bootannots, SampleID = bootsids)
-      for(eachcelltype in names(single.pool)){
-        smv = foreach(i = genes, .combine = rbind) %dopar% negbin.est(single.pool[[eachcelltype]][["simbulk"]][i, 
-                                                                                                               ])
-        rownames(smv) = genes
-        w.mu=cbind(w.mu, smv[, 1])
-        w.sigma=cbind(w.sigma, smv[, 2])
-      }
-      colnames(w.mu)=names(single.pool)
-      colnames(w.sigma)=names(single.pool)
-      ref.est = list(mus = mus, lambda = sizes, cell.specificity.w = w0, 
-                     cross.sample.w = list("w.mu"=w.mu,"w.sigma"=w.sigma))
     }
-    stopImplicitCluster()
-    return(ref.est)
+    w.mu=w.lambda=w.sigma=c()
+    single.pool=synthesize.celltype(bootcounts, bootannots, SampleID = bootsids)
+    for(eachcelltype in names(single.pool)){
+      
+      smv = foreach(i = genes, .combine = rbind) %dopar% negbin.est(single.pool[[eachcelltype]][["simbulk"]][i, 
+                                                                                                             ])
+      rownames(smv) = genes
+      w.mu=cbind(w.mu, smv[, 2])
+      w.lambda=cbind(w.lambda, smv[, 1])
+      tmpv=smv[, 2]+smv[, 2]^2/smv[, 1]
+      tmpv[is.na(tmpv)]=0
+      w.sigma=cbind(w.sigma, tmpv)
+    }
+    colnames(w.mu)=colnames(w.lambda)=names(single.pool)
+    
+    ref.est = list(mus = mus, lambda = sizes, cell.specificity.w = w0, 
+                   cross.sample.w = list("w.mu"=w.mu,"w.sigma"=w.sigma))
+  }
+  stopImplicitCluster()
+  return(ref.est)
 }

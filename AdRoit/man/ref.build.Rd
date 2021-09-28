@@ -13,7 +13,7 @@ ref.build(
   scale.factor = 1e+05,
   multi.sample.bulk = TRUE,
   multi.sample.single = TRUE,
-  nbootsids = 5,
+  nbootsids = 10,
   minbootsize = 50,
   silent = FALSE
 )
