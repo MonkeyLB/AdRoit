@@ -9,7 +9,7 @@
 
 synthesize.celltype <- function(counts, annotations, SampleID){
   
-  clusters = unique(sort(annotations))
+  clusters = unique(sort(as.vector(annotations)))
   s.SCcounts = counts
   s.annotations = annotations
   s.SampleID = SampleID
@@ -25,9 +25,11 @@ synthesize.celltype <- function(counts, annotations, SampleID){
         simbulk <- cbind(simbulk, rowSums(s.SCcounts[,selcells[idx]]))
       }
     }
+    normfactor=median(colSums(simbulk))
+    simbulk=round(sweep(simbulk, 2, colSums(simbulk),FUN="/")*normfactor)
     count.table = table(s.SampleID[selcells], s.annotations[selcells]) %>% as.data.frame.matrix() %>%
       t()
-    rownames(simbulk) = rownames(counts)
+    rownames(simbulk) = rownames(s.SCcounts)
     colnames(simbulk) = unique(s.SampleID[selcells])
     rs[[each]]=list("simbulk"=simbulk, "count"=count.table)
   }
