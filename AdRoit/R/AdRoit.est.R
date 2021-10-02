@@ -15,7 +15,7 @@
 #' @return a matrix with rows being cell types and columns being bulk samples, and entries are estimated proportions.
 #' @export
 
-AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.adapt=FALSE,silent = FALSE, lambda=1){
+AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.adapt=FALSE,init.est.method='nnls',silent = FALSE, lambda=1){
 
     # Calculate the number of cores
     no_cores <- detectCores() - 1
@@ -47,8 +47,8 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
         w[which(is.infinite(w) | is.na(w))] = 0
         
         if(!per.sample.adapt){
-          M = nnls::nnls(w0*x[genes,],  w0*rowMeans(bulk.sample[genes, ]))
-          ptheta = M$x/sum(M$x)
+          M = initBetaEst(x[genes,], rowMeans(bulk.sample[genes, ]), w0, w,init.est.method)
+          ptheta = M/sum(M)
           msf = abs(rowMeans(bulk.sample[genes, ])/(x %*% ptheta))
           msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
           r = log2(msf + 1)
@@ -67,19 +67,19 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
         }
         
         if(per.sample.adapt || nb < 3 || use.refvar){
-          M = nnls::nnls(w0*x[genes,],  w0*(bulk.sample[genes, i]))
-          ptheta = M$x/sum(M$x)
+          if (is.null(w)){
+            M = nnls::nnls(w0*x[genes,],  w0*(bulk.sample[genes, i]))
+            w= as.numeric(matrix(M$x %*% t(w.mu),ncol=1)/matrix(M$x %*% t(w.sigma),ncol=1))
+            names(w)=genes
+            w[which(is.infinite(w) | is.na(w))] = 0
+          }
+          M = initBetaEst(x[genes,], bulk.sample[genes, i], w0, w,init.est.method)
+          ptheta = M/sum(M)
           msf = abs((bulk.sample[genes, i])/(x %*% ptheta))
           msf[which(is.infinite(msf) | is.na(msf))] = median(msf, na.rm = T)
           r = log2(msf + 1)
         }
       
-        if (nb < 3 || use.refvar) {
-          w= as.numeric(matrix(M$x %*% t(w.mu),ncol=1)/matrix(M$x %*% t(w.sigma),ncol=1))
-          names(w)=genes
-          w[which(is.infinite(w) | is.na(w))] = 0
-        }
-        
         y = bulk.sample[genes, i]
         fn = function(theta) {
          (w0 * w) %*% (y - r * (x %*% theta))^2 + lambda * sum(theta^2)

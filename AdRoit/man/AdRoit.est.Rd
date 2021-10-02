@@ -9,6 +9,7 @@ AdRoit.est(
   single.ref,
   use.refvar = FALSE,
   per.sample.adapt = FALSE,
+  init.est.method = "nnls",
   silent = FALSE,
   lambda = 1
 )
