@@ -84,7 +84,7 @@ AdRoit.est <- function(bulk.sample, single.ref, use.refvar=FALSE, per.sample.ada
         fn = function(theta) {
          (w0 * w) %*% (y - r * (x %*% theta))^2 + lambda * sum(theta^2)
         }
-        print(summary(r))
+        
         gn = function(theta) {
           -2 * t(sweep(x, 1, r, `*`)) %*% (w0 * w * (y - r*(x %*% theta))) + 2 * lambda * theta
         }
