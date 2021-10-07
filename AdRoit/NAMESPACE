@@ -17,7 +17,14 @@ export(ref.build)
 export(rowVars)
 export(synthesize.bulk)
 export(synthesize.celltype)
-importFrom(doParallel,registerDoParallel)
-importFrom(doParallel,stopImplicitCluster)
-importFrom(parallel,detectCores)
-importFrom(stats,optim)
+importFrom("doParallel", "registerDoParallel", "stopImplicitCluster")
+importFrom("parallel", "detectCores")
+importFrom("stats", "cor", "filter", "median", "runif", "wilcox.test", "optim")
+importFrom("utils", "head")
+importFrom("Seurat", "GetAssayData", "Idents<-", "VariableFeatures")
+importFrom("dplyr", "%>%", "top_n", "arrange", "desc", "group_by", "mutate")
+importFrom("ggplot2", "aes", "element_blank", "element_text", "geom_bar",
+           "geom_line", "geom_point", "labs", "xlab", "ylab", "scale_color_manual",
+           "scale_colour_manual", "scale_size", "theme", "theme_bw", "theme_classic")
+importFrom("foreach", "foreach", "%dopar%")
+

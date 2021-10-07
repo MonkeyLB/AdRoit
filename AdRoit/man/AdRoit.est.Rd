@@ -23,6 +23,8 @@ AdRoit.est(
 
 \item{per.sample.adapt}{whether to do adapative learning for each sample.}
 
+\item{init.est.method}{choose the method for an initial estimation of cell type proportions. It can be `nnls` or `mle`. Default is `nnls`.}
+
 \item{silent}{whether to print out messages. Default is FALSE.}
 
 \item{lambda}{regularization strength. Default is 1.}
